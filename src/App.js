@@ -1,25 +1,85 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import { useSelector } from "react-redux";
+import { useHistory } from "react-router";
+import { Container } from "react-bootstrap";
+import Header from "./components/headers/header";
+import Sidebar from "./components/Sidebar/Sidebar";
+import HomeScreen from "./screens/homeScreen/HomeScreen";
+import LoginScreen from "./screens/LoginScreen/LoginScreen";
 
-function App() {
+import "./_App.scss";
+
+import { Route, Switch, Redirect } from "react-router-dom";
+import WatchScreen from "./screens/watchScreen/WatchScreen";
+import SearchScreen from "./screens/SearchScreen";
+import SubscriptionScreen from "./screens/subscriptionScreen/SubscriptionScreen";
+import ChannelScreen from "./screens/channelScreen/ChannelScreen";
+
+const Layout = ({ children }) => {
+  const [sidebar, toggleSidebar] = useState(false);
+
+  const handleToggleSidebar = () => {
+    toggleSidebar((value) => !value);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <Header handleToggleSidebar={handleToggleSidebar} />
+      <div className="app__container">
+        <Sidebar sidebar={sidebar} handleToggleSidebar={handleToggleSidebar} />
+        <Container fluid className="app__main">
+          {children}
+        </Container>
+      </div>
+    </>
   );
-}
+};
+
+const App = () => {
+  const { accessToken, loading } = useSelector((state) => state.auth);
+  const history = useHistory();
+  useEffect(() => {
+    if (!loading && !accessToken) {
+      history.push("/auth");
+    }
+  }, [accessToken, loading, history]);
+
+  return (
+    <Switch>
+      <Route path="/" exact>
+        <Layout>
+          <HomeScreen />
+        </Layout>
+      </Route>
+      <Route path="/auth">
+        <LoginScreen />
+      </Route>
+      <Route path="/search/:query">
+        <Layout>
+          <SearchScreen />
+        </Layout>
+      </Route>
+      <Route path="/watch/:id">
+        <Layout>
+          <WatchScreen />
+        </Layout>
+      </Route>
+      <Route path="/feed/subscriptions">
+        <Layout>
+          <SubscriptionScreen />
+        </Layout>
+      </Route>
+      <Route path="/channel/:channelId">
+        <Layout>
+          <ChannelScreen />
+        </Layout>
+      </Route>
+
+      <Route>
+        <Redirect to="/" />
+      </Route>
+    </Switch>
+  );
+};
 
 export default App;
